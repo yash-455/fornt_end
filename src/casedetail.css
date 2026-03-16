@@ -1,0 +1,49 @@
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.fade-in { animation: fadeIn 0.35s ease forwards; }
+
+.card { background: #0a0a0a; border: 1px solid #222222; border-radius: 8px; padding: 1.25rem; }
+.status-badge { border-radius: 3px; padding: 2px 8px; font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
+.label { font-size: 11px; font-family: 'DM Mono', monospace; text-transform: uppercase; letter-spacing: 0.1em; color: #7a7d8a; margin-bottom: 5px; }
+.btn { border: none; border-radius: 6px; padding: 0.55rem 1.1rem; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s; font-family: 'Lato', sans-serif; }
+.btn:hover { opacity: 0.85; }
+.btn-primary { background: #ffffff; color: #000000; }
+.btn-outline { background: transparent; color: #ffffff; border: 1px solid #ffffff; }
+
+.no-case { color: #7a7d8a; padding: 2rem; font-size: 14px; }
+.back-link { color: #c9963a; cursor: pointer; }
+
+.breadcrumb { display: flex; align-items: center; gap: 12px; margin-bottom: 1.5rem; }
+.breadcrumb-back { color: #ffffff; cursor: pointer; font-size: 13px; }
+.breadcrumb-sep { color: #222222; }
+.breadcrumb-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #ffffff; }
+
+.detail-top { display: grid; grid-template-columns: 1fr auto; gap: 1rem; margin-bottom: 1.5rem; align-items: start; }
+.info-cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+.info-value { font-size: 13px; font-weight: 700; color: #e8b860; }
+
+.ai-summary-box { margin-bottom: 1.5rem; padding: 1rem; background: #111111; border: 1px solid #222222; border-radius: 8px; }
+.ai-summary-label { font-size: 12px; font-family: 'DM Mono', monospace; color: #888888; margin-bottom: 6px; }
+.ai-summary-text { font-size: 14px; line-height: 1.7; color: #ffffff; }
+.ai-summary-note { font-size: 11px; color: #7a7d8a; margin-top: 8px; }
+
+.tabs { display: flex; border-bottom: 1px solid #252d3e; margin-bottom: 1.5rem; }
+.tab { padding: 0.65rem 1.25rem; cursor: pointer; border-bottom: 2px solid transparent; color: #7a7d8a; font-size: 13px; text-transform: capitalize; transition: color 0.15s; }
+.tab-active { border-bottom-color: #ffffff; color: #f0f0f0; font-weight: 700; }
+
+.notes-text { font-size: 14px; color: #a8aab5; line-height: 1.7; }
+
+.hearing-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.hearing-date-mono { font-family: 'DM Mono', monospace; font-size: 13px; color: #ffffff; }
+.hearing-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+.hearing-text { font-size: 13px; color: #ffffff; }
+.hearing-next { font-size: 13px; color: #aaaaaa; }
+.hearing-notes { font-size: 13px; color: #a8aab5; }
+
+.doc-row { display: flex; justify-content: space-between; align-items: center; }
+.doc-left { display: flex; align-items: center; gap: 10px; }
+.doc-icon { font-size: 22px; }
+.doc-name { font-size: 13px; font-weight: 700; color: #e8e3d8; }
+.doc-date { font-size: 11px; color: #7a7d8a; font-family: 'DM Mono', monospace; margin-top: 2px; }
+
+.empty { text-align: center; padding: 3rem; color: #7a7d8a; font-size: 14px; }
+.empty-icon { font-size: 32px; margin-bottom: 8px; }

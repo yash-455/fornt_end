@@ -1,0 +1,145 @@
+.hearings-content {
+    padding: 24px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.hearings-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.new-hearing-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #ffffff;
+    color: #000000;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+}
+
+.new-hearing-btn:hover {
+    background: #f0f0f0;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
+}
+
+.hearings-table-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    overflow: hidden;
+    backdrop-filter: blur(10px);
+}
+
+.hearings-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+.hearings-table th {
+    padding: 16px 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.hearings-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.95rem;
+}
+
+.hearing-id {
+    font-family: 'JetBrains Mono', monospace;
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.case-name-cell {
+    font-weight: 500;
+    color: #fff;
+}
+
+.datetime-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hearing-date {
+    font-weight: 500;
+    color: #fff;
+}
+
+.hearing-time {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.status-pill {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.status-pill.scheduled {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+    border: 1px solid rgba(52, 152, 219, 0.2);
+}
+
+.status-pill.completed {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.2);
+}
+
+.status-pill.tentative {
+    background: rgba(241, 196, 15, 0.1);
+    color: #f1c40f;
+    border: 1px solid rgba(241, 196, 15, 0.2);
+}
+
+.status-pill.cancelled {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.2);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .hearings-table th:nth-child(5),
+    .hearings-table td:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .hearings-table th:nth-child(4),
+    .hearings-table td:nth-child(4) {
+        display: none;
+    }
+}
