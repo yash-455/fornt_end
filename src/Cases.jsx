@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-import { MOCK_CASES } from "./theme";
 import "./cases.css";
 
-// ── SVG Icons (Cases Specific) ──
+const API_BASE = "http://localhost:8000";
+
+// ── SVG Icons ──
 const IconSearch = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -26,37 +27,126 @@ const IconBell = () => (
     </svg>
 );
 
-// ── Mock Cases Data ──
-// Mock cases moved to theme.js
-
 export default function Cases() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("All");
+    const [cases, setCases] = useState([]);
+    const [allCases, setAllCases] = useState([]);
+    const [clientMap, setClientMap] = useState({}); // client_id -> client_name
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef(null);
 
-    // Get logged-in user
     const session = JSON.parse(localStorage.getItem("trialdesk_session") || "null");
+    const token = session?.token;
 
     useEffect(() => {
-        if (!session) {
-            navigate("/", { replace: true });
-        }
+        if (!session) navigate("/", { replace: true });
     }, [session, navigate]);
+
+    // ── Fetch all clients once and build a map ──
+    useEffect(() => {
+        const fetchClients = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/clients/get_all`, {
+                    headers: { "Authorization": `Bearer ${token}` },
+                });
+                const data = await res.json();
+                if (Array.isArray(data)) {
+                    const map = {};
+                    data.forEach((cl) => { map[cl.id] = cl.name; });
+                    setClientMap(map);
+                }
+            } catch (_) {}
+        };
+        if (token) fetchClients();
+    }, [token]);
+
+    // ── Fetch all cases once for the search dropdown ──
+    useEffect(() => {
+        const fetchAllCases = async () => {
+            try {
+                const res = await fetch(`${API_BASE}/cases/get_all`, {
+                    headers: { "Authorization": `Bearer ${token}` },
+                });
+                const data = await res.json();
+                if (Array.isArray(data)) setAllCases(data);
+            } catch (_) {}
+        };
+        if (token) fetchAllCases();
+    }, [token]);
+
+    // ── Fetch filtered cases ──
+    useEffect(() => {
+        const fetchCases = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const params = new URLSearchParams();
+                if (searchQuery) params.append("name", searchQuery);
+                if (statusFilter !== "All") params.append("status", statusFilter.toLowerCase());
+
+                const res = await fetch(`${API_BASE}/cases/get_all?${params.toString()}`, {
+                    headers: { "Authorization": `Bearer ${token}` },
+                });
+
+                const data = await res.json();
+
+                if (res.status === 404) {
+                    setCases([]);
+                } else if (Array.isArray(data)) {
+                    setCases(data);
+                } else {
+                    setCases([]);
+                }
+            } catch (err) {
+                setError("Could not connect to server.");
+                setCases([]);
+            }
+            setLoading(false);
+        };
+
+        if (token) fetchCases();
+    }, [searchQuery, statusFilter, token]);
+
+    // ── Close dropdown on outside click ──
+    useEffect(() => {
+        const handleClick = (e) => {
+            if (searchRef.current && !searchRef.current.contains(e.target)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClick);
+        return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
 
     if (!session) return null;
 
-    const filteredCases = MOCK_CASES.filter(c => {
-        const matchesSearch = c.case_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.client_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            c.case_number.toLowerCase().includes(searchQuery.toLowerCase());
-        const matchesStatus = statusFilter === "All" || c.status.toLowerCase() === statusFilter.toLowerCase();
-        return matchesSearch && matchesStatus;
-    });
-
     const getInitials = (name) => {
+        if (!name) return "U";
         return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
     };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return "—";
+        try {
+            return new Date(dateStr).toLocaleDateString("en-IN", {
+                day: "2-digit", month: "short", year: "numeric"
+            });
+        } catch {
+            return dateStr;
+        }
+    };
+
+    const dropdownSuggestions = allCases.filter((c) =>
+        searchQuery
+            ? c.case_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              c.case_name.toLowerCase().includes(searchQuery.toLowerCase())
+            : true
+    );
 
     return (
         <div className="dash-layout">
@@ -67,7 +157,6 @@ export default function Cases() {
             />
 
             <main className="dash-main">
-                {/* Top Bar */}
                 <header className="dash-topbar">
                     <div className="topbar-left">
                         <h1 className="topbar-title">Case Management</h1>
@@ -83,18 +172,41 @@ export default function Cases() {
                 </header>
 
                 <div className="cases-content">
-                    {/* Toolbar */}
                     <div className="cases-toolbar">
                         <div className="toolbar-left">
-                            <div className="search-bar">
+
+                            {/* Search with dropdown */}
+                            <div className="search-bar" ref={searchRef} style={{ position: "relative" }}>
                                 <span className="search-icon"><IconSearch /></span>
                                 <input
                                     type="text"
-                                    placeholder="Search by ID, client, or matter..."
+                                    placeholder="Search by case ID or matter..."
                                     value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
+                                    onChange={(e) => {
+                                        setSearchQuery(e.target.value);
+                                        setShowDropdown(true);
+                                    }}
+                                    onFocus={() => setShowDropdown(true)}
                                 />
+                                {showDropdown && dropdownSuggestions.length > 0 && (
+                                    <div className="search-dropdown">
+                                        {dropdownSuggestions.map((c) => (
+                                            <div
+                                                key={c.id}
+                                                className="search-dropdown-item"
+                                                onMouseDown={() => {
+                                                    setShowDropdown(false);
+                                                    navigate(`/cases/${c.id}`);
+                                                }}
+                                            >
+                                                <span className="dropdown-case-id">{c.case_number}</span>
+                                                <span className="dropdown-case-name">{c.case_name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
                             </div>
+
                             <div className="filter-group">
                                 <span className="filter-icon"><IconFilter /></span>
                                 <select
@@ -109,13 +221,12 @@ export default function Cases() {
                                 </select>
                             </div>
                         </div>
-                        <button className="new-case-btn">
+                        <button className="new-case-btn" onClick={() => navigate("/cases/add")}>
                             <IconPlus />
                             <span>New Case</span>
                         </button>
                     </div>
 
-                    {/* Cases Table */}
                     <div className="cases-table-card">
                         <div className="table-responsive">
                             <table className="cases-table">
@@ -123,34 +234,44 @@ export default function Cases() {
                                     <tr>
                                         <th>Case ID</th>
                                         <th>Matter / Client</th>
-                                        <th>Assigned Lawyer</th>
-                                        <th>Practice Area</th>
+                                        <th>Type</th>
+                                        <th>Court</th>
                                         <th>Date Opened</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredCases.length > 0 ? (
-                                        filteredCases.map((c) => (
-                                            <tr key={c.id} onClick={() => navigate(`/cases/${c.id}`)} style={{ cursor: 'pointer' }}>
+                                    {loading ? (
+                                        <tr>
+                                            <td colSpan="7" className="no-results">Loading cases...</td>
+                                        </tr>
+                                    ) : error ? (
+                                        <tr>
+                                            <td colSpan="7" className="no-results">{error}</td>
+                                        </tr>
+                                    ) : cases.length > 0 ? (
+                                        cases.map((c) => (
+                                            <tr key={c.id} onClick={() => navigate(`/cases/${c.id}`)} style={{ cursor: "pointer" }}>
                                                 <td className="case-id">{c.case_number}</td>
                                                 <td>
                                                     <div className="matter-cell">
                                                         <div className="matter-name">{c.case_name}</div>
-                                                        <div className="client-name">{c.client_name}</div>
+                                                        <div className="client-name">
+                                                            {clientMap[c.client_id] || "—"}
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td className="lawyer-cell">Robert Vance</td>
-                                                <td className="type-cell">Civil Litigation</td>
-                                                <td className="date-cell">{c.filing_date}</td>
+                                                <td className="type-cell">{c.case_type}</td>
+                                                <td className="type-cell">{c.court || "—"}</td>
+                                                <td className="date-cell">{formatDate(c.filing_date)}</td>
                                                 <td>
-                                                    <span className={`status-pill ${c.status.toLowerCase()}`}>
+                                                    <span className={`status-pill ${c.status?.toLowerCase()}`}>
                                                         {c.status}
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <button className="action-dots" onClick={(e) => { e.stopPropagation(); }}>
+                                                    <button className="action-dots" onClick={(e) => e.stopPropagation()}>
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
                                                         </svg>
@@ -160,7 +281,7 @@ export default function Cases() {
                                         ))
                                     ) : (
                                         <tr>
-                                            <td colSpan="7" className="no-results">No cases found matching your criteria.</td>
+                                            <td colSpan="7" className="no-results">No cases found.</td>
                                         </tr>
                                     )}
                                 </tbody>

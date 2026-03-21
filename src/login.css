@@ -52,7 +52,6 @@ body {
   border-right: 1px solid rgba(212, 175, 55, 0.12);
 }
 
-/* Dark atmospheric background */
 .left-bg {
   position: absolute;
   inset: 0;
@@ -62,7 +61,6 @@ body {
   z-index: 0;
 }
 
-/* Gold glow at top edge */
 .gold-line {
   position: absolute;
   top: 0;
@@ -73,7 +71,6 @@ body {
   z-index: 3;
 }
 
-/* Courthouse silhouette via SVG */
 .courthouse-wrap {
   position: absolute;
   top: 0;
@@ -88,7 +85,6 @@ body {
   opacity: 0.1;
 }
 
-/* Decorative grid pattern */
 .grid-overlay {
   position: absolute;
   inset: 0;
@@ -99,52 +95,6 @@ body {
   background-size: 48px 48px;
 }
 
-/* 3D objects area */
-.objects-area {
-  position: absolute;
-  bottom: 130px;
-  right: 20px;
-  z-index: 2;
-  display: flex;
-  align-items: flex-end;
-  gap: 0;
-}
-
-/* Books stack */
-.books {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-}
-
-.book {
-  border-radius: 3px;
-  opacity: 0.85;
-}
-
-.book-1 {
-  width: 130px;
-  height: 22px;
-  background: linear-gradient(135deg, #1a2d50, #0e1c35);
-  border: 1px solid #2a3f60;
-}
-
-.book-2 {
-  width: 120px;
-  height: 20px;
-  background: linear-gradient(135deg, #162240, #0d1830);
-  border: 1px solid #243555;
-}
-
-.book-3 {
-  width: 140px;
-  height: 24px;
-  background: linear-gradient(135deg, #1c3055, #0f1f3a);
-  border: 1px solid #2e4565;
-}
-
-/* Gavel */
 .gavel-wrap {
   position: absolute;
   bottom: 140px;
@@ -171,7 +121,6 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
 }
 
-/* Left panel text content */
 .left-content {
   position: relative;
   z-index: 4;
@@ -322,7 +271,6 @@ label {
   box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
 }
 
-/* Animated gold bottom border on focus */
 .input-focus-line {
   position: absolute;
   bottom: 1px;
@@ -528,13 +476,12 @@ label {
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color 0.2s;
+  padding: 0;
 }
 
 .footer-note button:hover {
   color: var(--gold-hover);
 }
-
-
 
 /* ─── ANIMATIONS ─── */
 @keyframes fadeUp {
@@ -542,7 +489,6 @@ label {
     opacity: 0;
     transform: translateY(14px);
   }
-
   to {
     opacity: 1;
     transform: translateY(0);
@@ -615,13 +561,8 @@ label {
 }
 
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @media (max-width: 860px) {

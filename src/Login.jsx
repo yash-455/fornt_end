@@ -52,49 +52,27 @@ const IconBuilding = () => (
   </svg>
 );
 
-// Scales of Justice logo SVG (matching the reference image)
 const ScalesLogo = () => (
   <svg width="36" height="36" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-    {/* Center pole */}
     <rect x="48" y="10" width="4" height="55" fill="#D4AF37" />
-    {/* Top ornament */}
     <circle cx="50" cy="10" r="4" fill="#D4AF37" />
-    {/* Crossbar */}
     <rect x="15" y="28" width="70" height="3" rx="1.5" fill="#D4AF37" />
-    {/* Left chain */}
     <line x1="25" y1="31" x2="22" y2="52" stroke="#D4AF37" strokeWidth="2" />
-    {/* Right chain */}
     <line x1="75" y1="31" x2="78" y2="52" stroke="#D4AF37" strokeWidth="2" />
-    {/* Left pan */}
     <path d="M10 52 Q22 58 34 52" stroke="#D4AF37" strokeWidth="2.5" fill="none" strokeLinecap="round" />
     <line x1="10" y1="52" x2="34" y2="52" stroke="#D4AF37" strokeWidth="1.5" />
-    {/* Right pan */}
     <path d="M66 52 Q78 58 90 52" stroke="#D4AF37" strokeWidth="2.5" fill="none" strokeLinecap="round" />
     <line x1="66" y1="52" x2="90" y2="52" stroke="#D4AF37" strokeWidth="1.5" />
-    {/* Base book */}
     <ellipse cx="50" cy="68" rx="22" ry="5" fill="#D4AF37" opacity="0.9" />
     <rect x="29" y="63" width="42" height="8" rx="2" fill="#D4AF37" opacity="0.8" />
     <line x1="50" y1="63" x2="50" y2="71" stroke="#0B1320" strokeWidth="1.5" opacity="0.5" />
   </svg>
 );
 
-// ── localStorage-backed user store ──
-function getUsers() {
-  try { return JSON.parse(localStorage.getItem("trialdesk_users") || "[]"); }
-  catch { return []; }
-}
-function saveUser(user) {
-  const users = getUsers();
-  users.push(user);
-  localStorage.setItem("trialdesk_users", JSON.stringify(users));
-}
-function findUser(email, password) {
-  return getUsers().find((u) => u.email === email && u.password === password);
-}
-function findUserByEmail(email) {
-  return getUsers().find((u) => u.email === email);
-}
+// ── API base URL ──
+const API_BASE = "http://localhost:8000";
 
+// ── Validation ──
 function validate(fields, mode) {
   const errs = {};
   if (mode === "register") {
@@ -144,32 +122,110 @@ export default function Login() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
 
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 900));
 
-    if (tab === "login") {
-      const found = findUser(fields.email, fields.password);
-      if (!found) {
-        setGlobalMsg({ type: "error", text: "Invalid email or password." });
-        setLoading(false);
-        return;
+    // ── REGISTER ──
+    if (tab === "register") {
+      try {
+        const res = await fetch(`${API_BASE}/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: fields.name,
+            email: fields.email,
+            password: fields.password,
+            firm_name: fields.firm || null,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.message === "Email already registered") {
+          setGlobalMsg({ type: "error", text: "An account with this email already exists." });
+          setLoading(false);
+          return;
+        }
+
+        if (data.message === "User registered successfully" || data.id) {
+          setGlobalMsg({ type: "success", text: "Account created! Please log in." });
+          setLoading(false);
+          switchTab("login");
+          return;
+        }
+
+        setGlobalMsg({ type: "error", text: data.error || "Registration failed. Please try again." });
+      } catch (err) {
+        setGlobalMsg({ type: "error", text: "Could not connect to server. Is the backend running?" });
       }
-      localStorage.setItem("trialdesk_session", JSON.stringify(found));
+
       setLoading(false);
-      navigate("/dashboard");
-      return;
-    } else {
-      if (findUserByEmail(fields.email)) {
-        setGlobalMsg({ type: "error", text: "An account with this email already exists." });
-        setLoading(false);
-        return;
-      }
-      saveUser({ id: Date.now(), name: fields.name, firm: fields.firm, email: fields.email, password: fields.password });
-      setGlobalMsg({ type: "success", text: "Account created! Please log in." });
-      setLoading(false);
-      switchTab("login");
       return;
     }
-    setLoading(false);
+
+    // ── LOGIN ──
+    try {
+      // Step 1: get token
+      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: fields.email,
+          password: fields.password,
+        }),
+      });
+
+      const loginData = await loginRes.json();
+
+      if (loginData.message === "User not found") {
+        setGlobalMsg({ type: "error", text: "No account found with this email." });
+        setLoading(false);
+        return;
+      }
+
+      if (loginData.message === "Invalid password") {
+        setGlobalMsg({ type: "error", text: "Incorrect password. Please try again." });
+        setLoading(false);
+        return;
+      }
+
+      if (!loginData.token) {
+        setGlobalMsg({ type: "error", text: loginData.error || "Login failed. Please try again." });
+        setLoading(false);
+        return;
+      }
+
+      const token = loginData.token;
+
+      // Step 2: fetch full user profile using the token
+      const meRes = await fetch(`${API_BASE}/users/me`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+
+      const meData = await meRes.json();
+
+      // Step 3: save token + full user info to localStorage
+      localStorage.setItem("trialdesk_token", token);
+      localStorage.setItem(
+        "trialdesk_session",
+        JSON.stringify({
+          id: meData.id,
+          name: meData.name,
+          email: meData.email,
+          firm: meData.firm_name || "",
+          token: token,
+        })
+      );
+
+      setLoading(false);
+      navigate("/dashboard");
+
+    } catch (err) {
+      setGlobalMsg({ type: "error", text: "Could not connect to server." });
+      setLoading(false);
+    }
   };
 
   const handleKeyDown = (e) => { if (e.key === "Enter") handleSubmit(); };
@@ -179,15 +235,8 @@ export default function Login() {
       setForgotMsg({ type: "error", text: "Please enter a valid email address." });
       return;
     }
-    const found = findUserByEmail(forgotEmail);
-    if (!found) {
-      setForgotMsg({ type: "error", text: "No account found with this email." });
-    } else {
-      setForgotMsg({ type: "success", text: `Password reset link sent to ${forgotEmail}. Check your inbox!` });
-    }
+    setForgotMsg({ type: "success", text: `Password reset link sent to ${forgotEmail}. Check your inbox!` });
   };
-
-
 
   return (
     <div className="page">
@@ -198,42 +247,31 @@ export default function Login() {
         <div className="gold-line" />
         <div className="grid-overlay" />
 
-        {/* Courthouse silhouette */}
         <div className="courthouse-wrap">
           <svg viewBox="0 0 500 400" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ width: "100%", maxWidth: 520 }}>
-            {/* Pediment / triangle roof */}
             <polygon points="250,30 50,130 450,130" fill="#D4AF37" />
-            {/* Entablature */}
             <rect x="50" y="130" width="400" height="20" fill="#D4AF37" />
-            {/* Columns */}
             {[90, 150, 210, 270, 330, 390].map((x, i) => (
               <rect key={i} x={x} y="150" width="22" height="200" rx="3" fill="#D4AF37" />
             ))}
-            {/* Steps */}
             <rect x="30" y="350" width="440" height="14" rx="2" fill="#D4AF37" />
             <rect x="15" y="364" width="470" height="12" rx="2" fill="#D4AF37" />
           </svg>
         </div>
 
-        {/* CSS gavel/books decorative elements */}
         <div className="gavel-wrap">
           <div className="gavel-head" />
           <div className="gavel-handle" />
         </div>
 
         <div className="left-content">
-          {/* Brand */}
           <div className="brand-row">
             <ScalesLogo />
             <span className="brand-name">TrialDesk</span>
           </div>
-
-          {/* Hero text */}
           <div className="hero-title">
             Workspace<br />for Modern Law Firms
           </div>
-
-          {/* Feature list */}
           <div className="features">
             {["Manage Cases", "Track Hearings", "Secure Documents", "AI Legal Assistant"].map((f) => (
               <div className="feature-item" key={f}>
@@ -255,7 +293,6 @@ export default function Login() {
             {tab === "login" ? "Sign in to TrialDesk" : "Create your account"}
           </div>
 
-          {/* Global message */}
           {globalMsg && (
             <div className={globalMsg.type === "error" ? "global-error" : "global-success"}>
               {globalMsg.type === "error" ? "⚠ " : "✓ "}{globalMsg.text}
@@ -264,7 +301,6 @@ export default function Login() {
 
           <div className="field-group">
 
-            {/* Register: Name + Firm */}
             {tab === "register" && (
               <div className="field-row-2">
                 <div className="field">
@@ -288,7 +324,6 @@ export default function Login() {
               </div>
             )}
 
-            {/* Email */}
             <div className="field">
               <label htmlFor="email">Email Address</label>
               <div className="input-wrap">
@@ -299,7 +334,6 @@ export default function Login() {
               {errors.email && <span className="error-msg">⚠ {errors.email}</span>}
             </div>
 
-            {/* Password */}
             <div className="field">
               <label htmlFor="password">Password</label>
               <div className="input-wrap">
@@ -313,7 +347,6 @@ export default function Login() {
               {errors.password && <span className="error-msg">⚠ {errors.password}</span>}
             </div>
 
-            {/* Confirm password (register) */}
             {tab === "register" && (
               <div className="field">
                 <label htmlFor="confirm">Confirm Password</label>
@@ -330,7 +363,6 @@ export default function Login() {
             )}
           </div>
 
-          {/* Remember me + Forgot password (login only) */}
           {tab === "login" && (
             <div className="meta-row">
               <div className="remember-wrap" onClick={() => setRemember((v) => !v)}>
@@ -343,15 +375,18 @@ export default function Login() {
             </div>
           )}
 
-          {/* Submit */}
-          <button className="submit-btn" onClick={handleSubmit} disabled={loading} style={{ marginTop: tab === "register" ? 24 : 0 }}>
+          <button
+            className="submit-btn"
+            onClick={handleSubmit}
+            disabled={loading}
+            style={{ marginTop: tab === "register" ? 24 : 0 }}
+          >
             {loading && <span className="spinner" />}
             {loading
               ? (tab === "login" ? "Signing in…" : "Creating account…")
               : (tab === "login" ? "Sign In" : "Create Account")}
           </button>
 
-          {/* Footer link */}
           <div className="footer-note">
             {tab === "login" ? (
               <>Don't have an account?{" "}<button onClick={() => switchTab("register")}>Register</button></>
@@ -378,11 +413,20 @@ export default function Login() {
                 <label htmlFor="forgot-email">Email Address</label>
                 <div className="input-wrap">
                   <span className="input-icon"><IconEmail /></span>
-                  <input id="forgot-email" type="email" placeholder="demo@trialdesk.law" value={forgotEmail} onChange={(e) => { setForgotEmail(e.target.value); setForgotMsg(null); }} onKeyDown={(e) => { if (e.key === "Enter") handleForgotPassword(); }} />
+                  <input
+                    id="forgot-email"
+                    type="email"
+                    placeholder="demo@trialdesk.law"
+                    value={forgotEmail}
+                    onChange={(e) => { setForgotEmail(e.target.value); setForgotMsg(null); }}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleForgotPassword(); }}
+                  />
                   <span className="input-focus-line" />
                 </div>
               </div>
-              <button className="submit-btn" style={{ marginTop: 20 }} onClick={handleForgotPassword}>Send Reset Link</button>
+              <button className="submit-btn" style={{ marginTop: 20 }} onClick={handleForgotPassword}>
+                Send Reset Link
+              </button>
             </div>
           </div>
         )}
