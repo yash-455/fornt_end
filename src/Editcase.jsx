@@ -1,16 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import Sidebar from "./components/Sidebar";
-import "./addcase.css";
+import "./editcase.css";
 
 const API_BASE = "http://localhost:8000";
-
-const CASE_TYPES = [
-    "criminal", "civil", "family", "corporate",
-    "intellectual_property", "immigration", "labor", "tax", "other"
-];
 
 const CASE_STAGES = [
     "filing", "discovery", "pre_trial", "trial",
@@ -28,11 +23,12 @@ const CalendarIcon = () => (
     </svg>
 );
 
-export default function AddCase() {
+export default function EditCase() {
     const navigate = useNavigate();
+    const { id } = useParams();
     const [sidebarOpen, setSidebarOpen] = useState(true);
-    const [clients, setClients] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [fetching, setFetching] = useState(true);
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [filingDate, setFilingDate] = useState(null);
@@ -44,12 +40,9 @@ export default function AddCase() {
     const token = session?.token;
 
     const [form, setForm] = useState({
-        case_number: "",
         case_name: "",
-        case_type: "",
         status: "open",
         current_stage: "filing",
-        client_id: "",
         court: "",
         notes: "",
     });
@@ -61,25 +54,42 @@ export default function AddCase() {
     }, [session, navigate]);
 
     useEffect(() => {
-        const fetchClients = async () => {
+        const fetchCase = async () => {
+            setFetching(true);
             try {
-                const res = await fetch(`${API_BASE}/clients/get_all`, {
+                const res = await fetch(`${API_BASE}/cases/get/${id}`, {
                     headers: { "Authorization": `Bearer ${token}` },
                 });
                 const data = await res.json();
-                if (Array.isArray(data)) setClients(data);
-            } catch (_) {}
+                if (res.status === 404) { setError("Case not found."); setFetching(false); return; }
+                setForm({
+                    case_name: data.case_name || "",
+                    status: data.status || "open",
+                    current_stage: data.current_stage || "filing",
+                    court: data.court || "",
+                    notes: data.notes || "",
+                });
+                if (data.filing_date) {
+                    const d = new Date(data.filing_date);
+                    setFilingDate(d);
+                    setDateDisplay(d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }));
+                }
+            } catch (_) {
+                setError("Could not connect to server.");
+            }
+            setFetching(false);
         };
-        if (token) fetchClients();
-    }, [token]);
+        if (token && id) fetchCase();
+    }, [id, token]);
 
-    // ── Init flatpickr ──
+    // ── Init flatpickr after fetching is done ──
     useEffect(() => {
-        if (!dateInputRef.current) return;
+        if (fetching || !dateInputRef.current) return;
 
         fpInstance.current = flatpickr(dateInputRef.current, {
             dateFormat: "d M Y",
             disableMobile: true,
+            defaultDate: filingDate || undefined,
             onChange: (selectedDates, dateStr) => {
                 setFilingDate(selectedDates[0] || null);
                 setDateDisplay(dateStr);
@@ -89,7 +99,7 @@ export default function AddCase() {
         return () => {
             if (fpInstance.current) fpInstance.current.destroy();
         };
-    }, []);
+    }, [fetching]);
 
     const setField = (key) => (e) => {
         setForm((p) => ({ ...p, [key]: e.target.value }));
@@ -99,10 +109,7 @@ export default function AddCase() {
 
     const validate = () => {
         const errs = {};
-        if (!form.case_number.trim()) errs.case_number = "Case number is required";
         if (!form.case_name.trim()) errs.case_name = "Case name is required";
-        if (!form.case_type) errs.case_type = "Case type is required";
-        if (!form.client_id) errs.client_id = "Client is required";
         return errs;
     };
 
@@ -113,29 +120,24 @@ export default function AddCase() {
         setError(null);
         try {
             const payload = {
-                case_number: form.case_number,
                 case_name: form.case_name,
-                case_type: form.case_type,
                 status: form.status,
                 current_stage: form.current_stage,
-                client_id: form.client_id,
                 court: form.court || null,
                 filing_date: filingDate ? filingDate.toISOString() : null,
                 notes: form.notes || null,
             };
-            const res = await fetch(`${API_BASE}/cases/add`, {
-                method: "POST",
+            const res = await fetch(`${API_BASE}/cases/update/${id}`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
                 body: JSON.stringify(payload),
             });
             const data = await res.json();
-            if (res.status === 201 || data.id) {
+            if (res.ok || data.message === "Case updated successfully.") {
                 setSuccess(true);
                 setTimeout(() => navigate("/cases"), 1200);
-            } else if (res.status === 409) {
-                setError(`Case number "${form.case_number}" already exists.`);
             } else {
-                setError(data.detail || data.error || "Failed to create case.");
+                setError(data.detail || data.error || "Failed to update case.");
             }
         } catch (err) {
             setError("Could not connect to server.");
@@ -150,6 +152,13 @@ export default function AddCase() {
 
     if (!session) return null;
 
+    if (fetching) return (
+        <div className="dash-layout">
+            <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(v => !v)} session={session} />
+            <main className="dash-main"><div className="editcase-loading">Loading case details...</div></main>
+        </div>
+    );
+
     return (
         <div className="dash-layout">
             <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(v => !v)} session={session} />
@@ -157,57 +166,34 @@ export default function AddCase() {
             <main className="dash-main">
                 <header className="dash-topbar">
                     <div className="topbar-left">
-                        <h1 className="topbar-title">Add New Case</h1>
-                        <span className="topbar-subtitle">Fill in the details to create a new legal matter</span>
+                        <h1 className="topbar-title">Update Case</h1>
+                        <span className="topbar-subtitle">Edit the details of the selected legal matter</span>
                     </div>
                     <div className="topbar-right">
                         <div className="topbar-avatar">{getInitials(session.name)}</div>
                     </div>
                 </header>
 
-                <div className="addcase-content">
-                    <div className="addcase-card">
+                <div className="editcase-content">
+                    <div className="editcase-card">
 
-                        {error && <div className="addcase-error">⚠ {error}</div>}
-                        {success && <div className="addcase-success">✓ Case created! Redirecting...</div>}
+                        {error && <div className="editcase-error">⚠ {error}</div>}
+                        {success && <div className="editcase-success">✓ Case updated! Redirecting...</div>}
 
-                        <div className="addcase-grid">
+                        <div className="editcase-grid">
 
-                            <div className="addcase-field">
-                                <label>Case Number <span className="required">*</span></label>
-                                <input type="text" placeholder="e.g. 2024-CR-001" value={form.case_number} onChange={setField("case_number")} className={errors.case_number ? "field-error" : ""} />
-                                {errors.case_number && <span className="field-error-msg">⚠ {errors.case_number}</span>}
-                            </div>
-
-                            <div className="addcase-field">
+                            <div className="editcase-field">
                                 <label>Case Name <span className="required">*</span></label>
                                 <input type="text" placeholder="e.g. State vs. John Doe" value={form.case_name} onChange={setField("case_name")} className={errors.case_name ? "field-error" : ""} />
                                 {errors.case_name && <span className="field-error-msg">⚠ {errors.case_name}</span>}
                             </div>
 
-                            <div className="addcase-field">
-                                <label>Case Type <span className="required">*</span></label>
-                                <select value={form.case_type} onChange={setField("case_type")} className={errors.case_type ? "field-error" : ""}>
-                                    <option value="">Select case type</option>
-                                    {CASE_TYPES.map((t) => (
-                                        <option key={t} value={t}>{t.replace(/_/g, " ").replace(/\b\w/g, l => l.toUpperCase())}</option>
-                                    ))}
-                                </select>
-                                {errors.case_type && <span className="field-error-msg">⚠ {errors.case_type}</span>}
+                            <div className="editcase-field">
+                                <label>Court</label>
+                                <input type="text" placeholder="e.g. Ahmedabad Sessions Court" value={form.court} onChange={setField("court")} />
                             </div>
 
-                            <div className="addcase-field">
-                                <label>Client <span className="required">*</span></label>
-                                <select value={form.client_id} onChange={setField("client_id")} className={errors.client_id ? "field-error" : ""}>
-                                    <option value="">Select client</option>
-                                    {clients.map((cl) => (
-                                        <option key={cl.id} value={cl.id}>{cl.name}</option>
-                                    ))}
-                                </select>
-                                {errors.client_id && <span className="field-error-msg">⚠ {errors.client_id}</span>}
-                            </div>
-
-                            <div className="addcase-field">
+                            <div className="editcase-field">
                                 <label>Status</label>
                                 <select value={form.status} onChange={setField("status")}>
                                     {CASE_STATUSES.map((s) => (
@@ -216,7 +202,7 @@ export default function AddCase() {
                                 </select>
                             </div>
 
-                            <div className="addcase-field">
+                            <div className="editcase-field">
                                 <label>Current Stage</label>
                                 <select value={form.current_stage} onChange={setField("current_stage")}>
                                     {CASE_STAGES.map((s) => (
@@ -225,13 +211,8 @@ export default function AddCase() {
                                 </select>
                             </div>
 
-                            <div className="addcase-field">
-                                <label>Court</label>
-                                <input type="text" placeholder="e.g. Ahmedabad Sessions Court" value={form.court} onChange={setField("court")} />
-                            </div>
-
                             {/* ── Flatpickr Date Picker ── */}
-                            <div className="addcase-field">
+                            <div className="editcase-field">
                                 <label>Filing Date</label>
                                 <div className="fp-input-wrap">
                                     <input
@@ -248,15 +229,15 @@ export default function AddCase() {
 
                         </div>
 
-                        <div className="addcase-field addcase-notes">
+                        <div className="editcase-field editcase-notes">
                             <label>Notes</label>
                             <textarea placeholder="Any additional notes about the case..." value={form.notes} onChange={setField("notes")} rows={4} />
                         </div>
 
-                        <div className="addcase-actions">
+                        <div className="editcase-actions">
                             <button className="btn-cancel" onClick={() => navigate("/cases")}>Cancel</button>
                             <button className="btn-submit" onClick={handleSubmit} disabled={loading}>
-                                {loading ? <><span className="btn-spinner" /> Creating...</> : "Create Case"}
+                                {loading ? <><span className="btn-spinner" /> Updating...</> : "Update Case"}
                             </button>
                         </div>
 

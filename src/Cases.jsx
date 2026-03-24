@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
 import "./cases.css";
+import { createPortal } from "react-dom";
 
 const API_BASE = "http://localhost:8000";
 
@@ -34,11 +35,15 @@ export default function Cases() {
     const [statusFilter, setStatusFilter] = useState("All");
     const [cases, setCases] = useState([]);
     const [allCases, setAllCases] = useState([]);
-    const [clientMap, setClientMap] = useState({}); // client_id -> client_name
+    const [clientMap, setClientMap] = useState({});
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showDropdown, setShowDropdown] = useState(false);
+    const [openMenuId, setOpenMenuId] = useState(null);
+    const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+    const [deleteConfirmId, setDeleteConfirmId] = useState(null);
     const searchRef = useRef(null);
+    const menuRef = useRef(null);
 
     const session = JSON.parse(localStorage.getItem("trialdesk_session") || "null");
     const token = session?.token;
@@ -80,48 +85,66 @@ export default function Cases() {
     }, [token]);
 
     // ── Fetch filtered cases ──
-    useEffect(() => {
-        const fetchCases = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                const params = new URLSearchParams();
-                if (searchQuery) params.append("name", searchQuery);
-                if (statusFilter !== "All") params.append("status", statusFilter.toLowerCase());
+    const fetchCases = async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const params = new URLSearchParams();
+            if (searchQuery) params.append("name", searchQuery);
+            if (statusFilter !== "All") params.append("status", statusFilter.toLowerCase());
 
-                const res = await fetch(`${API_BASE}/cases/get_all?${params.toString()}`, {
-                    headers: { "Authorization": `Bearer ${token}` },
-                });
+            const res = await fetch(`${API_BASE}/cases/get_all?${params.toString()}`, {
+                headers: { "Authorization": `Bearer ${token}` },
+            });
 
-                const data = await res.json();
+            const data = await res.json();
 
-                if (res.status === 404) {
-                    setCases([]);
-                } else if (Array.isArray(data)) {
-                    setCases(data);
-                } else {
-                    setCases([]);
-                }
-            } catch (err) {
-                setError("Could not connect to server.");
+            if (res.status === 404) {
+                setCases([]);
+            } else if (Array.isArray(data)) {
+                setCases(data);
+            } else {
                 setCases([]);
             }
-            setLoading(false);
-        };
+        } catch (err) {
+            setError("Could not connect to server.");
+            setCases([]);
+        }
+        setLoading(false);
+    };
 
+    useEffect(() => {
         if (token) fetchCases();
     }, [searchQuery, statusFilter, token]);
 
-    // ── Close dropdown on outside click ──
+    // ── Close dropdowns on outside click ──
     useEffect(() => {
         const handleClick = (e) => {
             if (searchRef.current && !searchRef.current.contains(e.target)) {
                 setShowDropdown(false);
             }
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                setOpenMenuId(null);
+            }
         };
         document.addEventListener("mousedown", handleClick);
         return () => document.removeEventListener("mousedown", handleClick);
     }, []);
+
+    // ── Delete case ──
+    const handleDelete = async (caseId) => {
+        try {
+            const res = await fetch(`${API_BASE}/cases/delete/${caseId}`, {
+                method: "DELETE",
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+            if (res.ok) {
+                setDeleteConfirmId(null);
+                setOpenMenuId(null);
+                fetchCases();
+            }
+        } catch (_) {}
+    };
 
     if (!session) return null;
 
@@ -150,11 +173,7 @@ export default function Cases() {
 
     return (
         <div className="dash-layout">
-            <Sidebar
-                isOpen={sidebarOpen}
-                toggleSidebar={() => setSidebarOpen(v => !v)}
-                session={session}
-            />
+            <Sidebar isOpen={sidebarOpen} toggleSidebar={() => setSidebarOpen(v => !v)} session={session} />
 
             <main className="dash-main">
                 <header className="dash-topbar">
@@ -182,10 +201,7 @@ export default function Cases() {
                                     type="text"
                                     placeholder="Search by case ID or matter..."
                                     value={searchQuery}
-                                    onChange={(e) => {
-                                        setSearchQuery(e.target.value);
-                                        setShowDropdown(true);
-                                    }}
+                                    onChange={(e) => { setSearchQuery(e.target.value); setShowDropdown(true); }}
                                     onFocus={() => setShowDropdown(true)}
                                 />
                                 {showDropdown && dropdownSuggestions.length > 0 && (
@@ -194,10 +210,7 @@ export default function Cases() {
                                             <div
                                                 key={c.id}
                                                 className="search-dropdown-item"
-                                                onMouseDown={() => {
-                                                    setShowDropdown(false);
-                                                    navigate(`/cases/${c.id}`);
-                                                }}
+                                                onMouseDown={() => { setShowDropdown(false); navigate(`/cases/${c.id}`); }}
                                             >
                                                 <span className="dropdown-case-id">{c.case_number}</span>
                                                 <span className="dropdown-case-name">{c.case_name}</span>
@@ -209,11 +222,7 @@ export default function Cases() {
 
                             <div className="filter-group">
                                 <span className="filter-icon"><IconFilter /></span>
-                                <select
-                                    value={statusFilter}
-                                    onChange={(e) => setStatusFilter(e.target.value)}
-                                    className="status-select"
-                                >
+                                <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="status-select">
                                     <option value="All">All Statuses</option>
                                     <option value="Open">Open</option>
                                     <option value="Pending">Pending</option>
@@ -227,6 +236,7 @@ export default function Cases() {
                         </button>
                     </div>
 
+                    {/* Cases Table */}
                     <div className="cases-table-card">
                         <div className="table-responsive">
                             <table className="cases-table">
@@ -243,13 +253,9 @@ export default function Cases() {
                                 </thead>
                                 <tbody>
                                     {loading ? (
-                                        <tr>
-                                            <td colSpan="7" className="no-results">Loading cases...</td>
-                                        </tr>
+                                        <tr><td colSpan="7" className="no-results">Loading cases...</td></tr>
                                     ) : error ? (
-                                        <tr>
-                                            <td colSpan="7" className="no-results">{error}</td>
-                                        </tr>
+                                        <tr><td colSpan="7" className="no-results">{error}</td></tr>
                                     ) : cases.length > 0 ? (
                                         cases.map((c) => (
                                             <tr key={c.id} onClick={() => navigate(`/cases/${c.id}`)} style={{ cursor: "pointer" }}>
@@ -257,21 +263,28 @@ export default function Cases() {
                                                 <td>
                                                     <div className="matter-cell">
                                                         <div className="matter-name">{c.case_name}</div>
-                                                        <div className="client-name">
-                                                            {clientMap[c.client_id] || "—"}
-                                                        </div>
+                                                        <div className="client-name">{clientMap[c.client_id] || "—"}</div>
                                                     </div>
                                                 </td>
                                                 <td className="type-cell">{c.case_type}</td>
                                                 <td className="type-cell">{c.court || "—"}</td>
                                                 <td className="date-cell">{formatDate(c.filing_date)}</td>
                                                 <td>
-                                                    <span className={`status-pill ${c.status?.toLowerCase()}`}>
-                                                        {c.status}
-                                                    </span>
+                                                    <span className={`status-pill ${c.status?.toLowerCase()}`}>{c.status}</span>
                                                 </td>
                                                 <td>
-                                                    <button className="action-dots" onClick={(e) => e.stopPropagation()}>
+                                                    <button
+                                                        className="action-dots"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            const rect = e.currentTarget.getBoundingClientRect();
+                                                            setMenuPos({
+                                                                top: rect.bottom + 4,
+                                                                left: rect.right - 140,
+                                                            });
+                                                            setOpenMenuId(openMenuId === c.id ? null : c.id);
+                                                        }}
+                                                    >
                                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                                             <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
                                                         </svg>
@@ -280,16 +293,52 @@ export default function Cases() {
                                             </tr>
                                         ))
                                     ) : (
-                                        <tr>
-                                            <td colSpan="7" className="no-results">No cases found.</td>
-                                        </tr>
+                                        <tr><td colSpan="7" className="no-results">No cases found.</td></tr>
                                     )}
                                 </tbody>
                             </table>
                         </div>
                     </div>
+
+                    {/* Action Menu — rendered outside table to avoid clipping */}
+                    {openMenuId && createPortal(
+                        <div
+                            className="action-menu"
+                            ref={menuRef}
+                            style={{ position: "fixed", top: menuPos.top, left: menuPos.left, zIndex: 9999 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button
+                                className="action-menu-item"
+                                onClick={() => { setOpenMenuId(null); navigate(`/cases/edit/${openMenuId}`); }}
+                            >
+                                ✏️ Update
+                            </button>
+                            <button
+                                className="action-menu-item action-menu-delete"
+                                onClick={() => { setDeleteConfirmId(openMenuId); setOpenMenuId(null); }}
+                            >
+                                🗑️ Delete
+                            </button>
+                        </div>,
+                        document.body
+                    )}
                 </div>
             </main>
+
+            {/* Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="modal-overlay" onClick={() => setDeleteConfirmId(null)}>
+                    <div className="modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="modal-title">Delete Case</div>
+                        <div className="modal-desc">Are you sure you want to delete this case? This action cannot be undone.</div>
+                        <div className="modal-actions">
+                            <button className="btn-cancel" onClick={() => setDeleteConfirmId(null)}>Cancel</button>
+                            <button className="btn-delete" onClick={() => handleDelete(deleteConfirmId)}>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

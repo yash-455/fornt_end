@@ -1,8 +1,58 @@
 .hearings-content {
-    padding: 24px;
+    padding: 24px 32px;
     animation: fadeIn 0.4s ease-out;
 }
 
+/* ── Tabs ── */
+.hearings-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #222222;
+    padding-bottom: 0;
+}
+
+.hearings-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: #888888;
+    font-size: 14px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+    margin-bottom: -1px;
+}
+
+.hearings-tab:hover { color: #cccccc; }
+
+.hearings-tab.active {
+    color: #ffffff;
+    border-bottom-color: #ffffff;
+    font-weight: 700;
+}
+
+.tab-count {
+    background: #222222;
+    color: #888888;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.hearings-tab.active .tab-count {
+    background: #ffffff;
+    color: #000000;
+}
+
+/* ── Toolbar ── */
 .hearings-toolbar {
     display: flex;
     justify-content: space-between;
@@ -10,6 +60,13 @@
     margin-bottom: 24px;
     gap: 16px;
     flex-wrap: wrap;
+}
+
+.toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
 }
 
 .new-hearing-btn {
@@ -22,23 +79,21 @@
     padding: 10px 20px;
     border-radius: 8px;
     font-weight: 600;
+    font-size: 14px;
     cursor: pointer;
     transition: all 0.2s;
-    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+    white-space: nowrap;
 }
 
-.new-hearing-btn:hover {
-    background: #f0f0f0;
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(212, 175, 55, 0.3);
-}
+.new-hearing-btn svg { width: 16px; height: 16px; }
+.new-hearing-btn:hover { background: #f0f0f0; }
 
+/* ── Table ── */
 .hearings-table-card {
     background: rgba(255, 255, 255, 0.03);
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 16px;
     overflow: hidden;
-    backdrop-filter: blur(10px);
 }
 
 .hearings-table {
@@ -49,7 +104,7 @@
 
 .hearings-table th {
     padding: 16px 20px;
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     font-weight: 600;
     color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
@@ -62,84 +117,118 @@
     padding: 16px 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     color: rgba(255, 255, 255, 0.8);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
+    vertical-align: middle;
 }
 
-.hearing-id {
+.hearings-table tr:last-child td { border-bottom: none; }
+.hearings-table tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+/* ── Case cell ── */
+.hearing-case-number {
     font-family: 'JetBrains Mono', monospace;
-    color: #ffffff;
+    font-size: 13px;
+    color: #D4AF37;
     font-weight: 600;
 }
 
-.case-name-cell {
-    font-weight: 500;
-    color: #fff;
-}
-
-.datetime-cell {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.hearing-date {
-    font-weight: 500;
-    color: #fff;
-}
-
-.hearing-time {
-    font-size: 0.85rem;
+.hearing-case-name {
+    font-size: 12px;
     color: rgba(255, 255, 255, 0.5);
+    margin-top: 3px;
 }
 
-.status-pill {
-    padding: 6px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
-    font-weight: 600;
+.hearing-case-status {
+    font-size: 11px;
+    margin-top: 4px;
+    display: block;
     text-transform: capitalize;
 }
 
-.status-pill.scheduled {
-    background: rgba(52, 152, 219, 0.1);
-    color: #3498db;
-    border: 1px solid rgba(52, 152, 219, 0.2);
+/* ── Date & time cells ── */
+.hearing-date { font-weight: 500; color: #fff; font-size: 13px; }
+.hearing-time { font-size: 12px; color: rgba(255, 255, 255, 0.5); margin-top: 2px; }
+
+/* ── Days label ── */
+.days-label {
+    display: inline-block;
+    margin-top: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
 }
 
-.status-pill.completed {
-    background: rgba(46, 204, 113, 0.1);
-    color: #2ecc71;
-    border: 1px solid rgba(46, 204, 113, 0.2);
+.days-today {
+    background: rgba(212, 175, 55, 0.15);
+    color: #D4AF37;
+    border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-.status-pill.tentative {
-    background: rgba(241, 196, 15, 0.1);
-    color: #f1c40f;
-    border: 1px solid rgba(241, 196, 15, 0.2);
+.days-soon {
+    background: rgba(74, 222, 128, 0.1);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.25);
 }
 
-.status-pill.cancelled {
-    background: rgba(231, 76, 60, 0.1);
-    color: #e74c3c;
-    border: 1px solid rgba(231, 76, 60, 0.2);
+.days-normal {
+    background: rgba(255, 255, 255, 0.06);
+    color: #888888;
+    border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+.days-past {
+    background: rgba(255, 107, 107, 0.08);
+    color: #ff6b6b;
+    border: 1px solid rgba(255, 107, 107, 0.2);
 }
 
-/* Responsive adjustments */
-@media (max-width: 1024px) {
-    .hearings-table th:nth-child(5),
-    .hearings-table td:nth-child(5) {
-        display: none;
-    }
+/* ── Outcome pill ── */
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: rgba(255,255,255,0.07);
+    color: #ffffff;
+    border: 1px solid rgba(255,255,255,0.15);
+    white-space: nowrap;
 }
 
-@media (max-width: 768px) {
-    .hearings-table th:nth-child(4),
-    .hearings-table td:nth-child(4) {
-        display: none;
-    }
+/* ── Filter ── */
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #0a0a0a;
+    border: 1px solid #222222;
+    border-radius: 8px;
+    padding: 0 12px;
+    height: 38px;
 }
+
+.filter-icon { width: 16px; height: 16px; color: #888888; }
+
+.status-select {
+    background: transparent;
+    border: none;
+    color: #ffffff;
+    font-size: 13px;
+    padding: 2px 0;
+    outline: none;
+    cursor: pointer;
+}
+
+.status-select option { background: #0a0a0a; color: #ffffff; }
+
+.notes-cell { font-size: 12px; color: rgba(255,255,255,0.4); max-width: 180px; }
+
+.no-results {
+    text-align: center;
+    padding: 40px !important;
+    color: rgba(255,255,255,0.3);
+    font-style: italic;
+}
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
