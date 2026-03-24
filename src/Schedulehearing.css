@@ -105,6 +105,15 @@
 .sh-field textarea { resize: vertical; min-height: 100px; }
 .field-error-msg { font-size: 12px; color: #ff6b6b; }
 
+.sh-time-input {
+    min-height: 44px;
+}
+
+.sh-time-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    cursor: pointer;
+}
+
 /* ── Last Hearing Date display box ── */
 .sh-last-date-box {
     background: #0f0f0f;

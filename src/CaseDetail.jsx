@@ -163,6 +163,31 @@ export default function CaseDetail() {
         setLoadingSummary(false);
     };
 
+    const handleDownloadDoc = async (doc) => {
+        const docId = doc?.doc_id;
+        if (!docId) return;
+
+        try {
+            const res = await fetch(`${API_BASE}/docs/download/${docId}`, {
+                headers: { "Authorization": `Bearer ${token}` },
+            });
+
+            if (!res.ok) throw new Error("Download failed");
+
+            const blob = await res.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = doc.filename || `document-${docId}`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+        } catch {
+            setError("Unable to download document.");
+        }
+    };
+
     // ── Edit Submit ──
     const handleEditSubmit = async () => {
         setEditLoading(true);
@@ -357,7 +382,7 @@ export default function CaseDetail() {
                                         <button
                                             className="btn btn-outline"
                                             style={{ fontSize: 11 }}
-                                            onClick={() => window.open(`${API_BASE}/docs/download/${d.doc_id}`, "_blank")}
+                                            onClick={() => handleDownloadDoc(d)}
                                         >
                                             Download
                                         </button>

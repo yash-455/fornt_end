@@ -8,6 +8,8 @@ import CaseDetail from "./CaseDetail"
 import AddCase from "./Addcase"
 import EditCase from "./Editcase"
 import ScheduleHearing from "./Schedulehearing"
+import Documents from "./Documents"
+import AddDocument from "./Adddocument"
 
 function App() {
   return (
@@ -21,6 +23,8 @@ function App() {
         <Route path="/cases/:id" element={<CaseDetail />} />
         <Route path="/hearings" element={<Hearings />} />
         <Route path="/hearings/schedule" element={<ScheduleHearing />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/adddocument" element={<AddDocument />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

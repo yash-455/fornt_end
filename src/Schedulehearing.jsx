@@ -2,10 +2,6 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import dayjs from 'dayjs';
 import Sidebar from "./components/Sidebar";
 import "./schedulehearing.css";
 
@@ -30,7 +26,8 @@ export default function ScheduleHearing() {
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(false);
     const [lastHearingDate, setLastHearingDate] = useState(null);
-    const [nextTimeVal, setNextTimeVal] = useState(dayjs().hour(10).minute(0));
+    const [nextTime, setNextTime] = useState("10:00");
+
 
     const nextDateRef = useRef(null);
     const fpNextDate = useRef(null);
@@ -118,13 +115,13 @@ export default function ScheduleHearing() {
         return errs;
     };
 
-    const combineDateTime = (date, timeVal) => {
-        if (!date || !timeVal) return null;
+    const combineDateTime = (date, time) => {
+        if (!date || !time) return null;
+        const [hours, minutes] = time.split(":").map(Number);
         const d = new Date(date);
-        d.setHours(timeVal.hour(), timeVal.minute(), 0, 0);
+        d.setHours(hours, minutes, 0, 0);
         return d.toISOString();
     };
-
     const handleSubmit = async () => {
         const errs = validate();
         if (Object.keys(errs).length) { setFormErrors(errs); return; }
@@ -136,7 +133,7 @@ export default function ScheduleHearing() {
                 judge: form.judge || null,
                 outcome: form.outcome,
                 date: lastHearingDate ? new Date(lastHearingDate).toISOString() : null,
-                next_date: combineDateTime(nextDateVal, nextTimeVal),
+                next_date: combineDateTime(nextDateVal, nextTime),
                 notes: form.notes || null,
             };
             const res = await fetch(`${API_BASE}/hearings/add`, {
@@ -245,22 +242,14 @@ export default function ScheduleHearing() {
                                 {formErrors.next_date && <span className="field-error-msg">⚠ {formErrors.next_date}</span>}
                             </div>
 
-                            {/* ── MUI TimePicker ── */}
                             <div className="sh-field">
-                                <label>Next Hearing Time <span className="required">*</span></label>
-                                <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <TimePicker
-                                        value={nextTimeVal}
-                                        onChange={(val) => setNextTimeVal(val)}
-                                        slotProps={{
-                                            textField: {
-                                                variant: "outlined",
-                                                size: "small",
-                                                className: "sh-mui-timepicker",
-                                            },
-                                        }}
-                                    />
-                                </LocalizationProvider>
+                                <label>Time <span className="required">*</span></label>
+                                <input
+                                    type="time"
+                                    value={nextTime}
+                                    onChange={(e) => setNextTime(e.target.value)}
+                                    className="sh-time-input"
+                                />
                             </div>
 
                         </div>
@@ -282,4 +271,4 @@ export default function ScheduleHearing() {
             </main>
         </div>
     );
-}1
+}
