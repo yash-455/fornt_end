@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import "./login.css";
+import "./register.css";
 
-// ── SVG Icons ──────────────────────────────────────────────────
 const IconEmail = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="4" width="20" height="16" rx="2" />
@@ -32,9 +31,17 @@ const IconEyeOff = () => (
   </svg>
 );
 
-const IconCheck = () => (
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="20 6 9 17 4 12" />
+const IconUser = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+    <circle cx="12" cy="7" r="4" />
+  </svg>
+);
+
+const IconBuilding = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="3" width="18" height="18" rx="1" />
+    <path d="M3 9h18M9 21V9" />
   </svg>
 );
 
@@ -55,27 +62,28 @@ const ScalesLogo = () => (
   </svg>
 );
 
-// ── API base URL ──
 const API_BASE = "http://localhost:8000";
 
-// ── Validation ──
 function validate(fields) {
   const errs = {};
+  if (!fields.name?.trim()) errs.name = "Full name is required";
+  if (!fields.firm?.trim()) errs.firm = "Firm name is required";
   if (!fields.email) errs.email = "Email is required";
   else if (!/\S+@\S+\.\S+/.test(fields.email)) errs.email = "Enter a valid email";
   if (!fields.password) errs.password = "Password is required";
   else if (fields.password.length < 6) errs.password = "Minimum 6 characters";
+  if (fields.password && fields.confirm !== fields.password) errs.confirm = "Passwords do not match";
   return errs;
 }
 
-export default function Login() {
+export default function Register() {
   const navigate = useNavigate();
-  const [fields, setFields] = useState({ email: "", password: "" });
+  const [fields, setFields] = useState({ name: "", firm: "", email: "", password: "", confirm: "" });
   const [errors, setErrors] = useState({});
   const [globalMsg, setGlobalMsg] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showPass, setShowPass] = useState(false);
-  const [remember, setRemember] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const setField = (key) => (e) => {
     setFields((p) => ({ ...p, [key]: e.target.value }));
@@ -85,83 +93,53 @@ export default function Login() {
 
   const handleSubmit = async () => {
     const errs = validate(fields);
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length) {
+      setErrors(errs);
+      return;
+    }
 
     setLoading(true);
-
-    // ── LOGIN ──
     try {
-      // Step 1: get token
-      const loginRes = await fetch(`${API_BASE}/auth/login`, {
+      const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          name: fields.name,
           email: fields.email,
           password: fields.password,
+          firm_name: fields.firm || null,
         }),
       });
 
-      const loginData = await loginRes.json();
+      const data = await res.json();
 
-      if (loginData.message === "User not found") {
-        setGlobalMsg({ type: "error", text: "No account found with this email." });
+      if (data.message === "Email already registered") {
+        setGlobalMsg({ type: "error", text: "An account with this email already exists." });
         setLoading(false);
         return;
       }
 
-      if (loginData.message === "Invalid password") {
-        setGlobalMsg({ type: "error", text: "Incorrect password. Please try again." });
+      if (data.message === "User registered successfully" || data.id) {
+        setGlobalMsg({ type: "success", text: "Account created successfully. Redirecting to login..." });
         setLoading(false);
+        setTimeout(() => navigate("/login"), 900);
         return;
       }
 
-      if (!loginData.token) {
-        setGlobalMsg({ type: "error", text: loginData.error || "Login failed. Please try again." });
-        setLoading(false);
-        return;
-      }
-
-      const token = loginData.token;
-
-      // Step 2: fetch full user profile using the token
-      const meRes = await fetch(`${API_BASE}/users/me`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-
-      const meData = await meRes.json();
-
-      // Step 3: save token + full user info to localStorage
-      localStorage.setItem("trialdesk_token", token);
-      localStorage.setItem(
-        "trialdesk_session",
-        JSON.stringify({
-          id: meData.id,
-          name: meData.name,
-          email: meData.email,
-          firm: meData.firm_name || "",
-          token: token,
-        })
-      );
-
-      setLoading(false);
-      navigate("/dashboard");
-
+      setGlobalMsg({ type: "error", text: data.error || "Registration failed. Please try again." });
     } catch (err) {
-      setGlobalMsg({ type: "error", text: "Could not connect to server." });
-      setLoading(false);
+      setGlobalMsg({ type: "error", text: "Could not connect to server. Is the backend running?" });
     }
+
+    setLoading(false);
   };
 
-  const handleKeyDown = (e) => { if (e.key === "Enter") handleSubmit(); };
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSubmit();
+  };
 
   return (
     <div className="page">
-
-      {/* ── LEFT PANEL ── */}
       <div className="left-panel">
         <div className="left-bg" />
         <div className="gold-line" />
@@ -205,19 +183,38 @@ export default function Login() {
         </div>
       </div>
 
-      {/* ── RIGHT PANEL ── */}
       <div className="right-panel">
         <div className="form-card">
-
-          <div className="form-title">Sign in to TrialDesk</div>
+          <div className="form-title">Create your account</div>
 
           {globalMsg && (
             <div className={globalMsg.type === "error" ? "global-error" : "global-success"}>
-              {globalMsg.type === "error" ? "⚠ " : "✓ "}{globalMsg.text}
+              {globalMsg.type === "error" ? "! " : "OK "}{globalMsg.text}
             </div>
           )}
 
           <div className="field-group">
+            <div className="field-row-2">
+              <div className="field">
+                <label htmlFor="name">Full Name</label>
+                <div className="input-wrap">
+                  <span className="input-icon"><IconUser /></span>
+                  <input id="name" type="text" placeholder="Alexandra Hart" value={fields.name} onChange={setField("name")} className={errors.name ? "error-field" : ""} onKeyDown={handleKeyDown} />
+                  <span className="input-focus-line" />
+                </div>
+                {errors.name && <span className="error-msg">! {errors.name}</span>}
+              </div>
+              <div className="field">
+                <label htmlFor="firm">Firm Name</label>
+                <div className="input-wrap">
+                  <span className="input-icon"><IconBuilding /></span>
+                  <input id="firm" type="text" placeholder="Hart and Associates" value={fields.firm} onChange={setField("firm")} className={errors.firm ? "error-field" : ""} onKeyDown={handleKeyDown} />
+                  <span className="input-focus-line" />
+                </div>
+                {errors.firm && <span className="error-msg">! {errors.firm}</span>}
+              </div>
+            </div>
+
             <div className="field">
               <label htmlFor="email">Email Address</label>
               <div className="input-wrap">
@@ -225,48 +222,45 @@ export default function Login() {
                 <input id="email" type="email" placeholder="demo@trialdesk.law" value={fields.email} onChange={setField("email")} className={errors.email ? "error-field" : ""} onKeyDown={handleKeyDown} />
                 <span className="input-focus-line" />
               </div>
-              {errors.email && <span className="error-msg">⚠ {errors.email}</span>}
+              {errors.email && <span className="error-msg">! {errors.email}</span>}
             </div>
 
             <div className="field">
               <label htmlFor="password">Password</label>
               <div className="input-wrap">
                 <span className="input-icon"><IconLock /></span>
-                <input id="password" type={showPass ? "text" : "password"} placeholder="Enter your password" value={fields.password} onChange={setField("password")} className={errors.password ? "error-field" : ""} onKeyDown={handleKeyDown} />
+                <input id="password" type={showPass ? "text" : "password"} placeholder="Min. 6 characters" value={fields.password} onChange={setField("password")} className={errors.password ? "error-field" : ""} onKeyDown={handleKeyDown} />
                 <span className="input-focus-line" />
                 <button className="eye-btn" onClick={() => setShowPass((v) => !v)} type="button" tabIndex={-1}>
                   {showPass ? <IconEyeOff /> : <IconEye />}
                 </button>
               </div>
-              {errors.password && <span className="error-msg">⚠ {errors.password}</span>}
+              {errors.password && <span className="error-msg">! {errors.password}</span>}
             </div>
-          </div>
 
-          <div className="meta-row">
-            <div className="remember-wrap" onClick={() => setRemember((v) => !v)}>
-              <div className={`custom-checkbox ${remember ? "checked" : ""}`}>
-                {remember && <IconCheck />}
+            <div className="field">
+              <label htmlFor="confirm">Confirm Password</label>
+              <div className="input-wrap">
+                <span className="input-icon"><IconLock /></span>
+                <input id="confirm" type={showConfirm ? "text" : "password"} placeholder="Repeat password" value={fields.confirm} onChange={setField("confirm")} className={errors.confirm ? "error-field" : ""} onKeyDown={handleKeyDown} />
+                <span className="input-focus-line" />
+                <button className="eye-btn" onClick={() => setShowConfirm((v) => !v)} type="button" tabIndex={-1}>
+                  {showConfirm ? <IconEyeOff /> : <IconEye />}
+                </button>
               </div>
-              <span className="remember-label">Remember me</span>
+              {errors.confirm && <span className="error-msg">! {errors.confirm}</span>}
             </div>
-            <button className="forgot-link" onClick={() => navigate("/forgot-password")}>Forgot password?</button>
           </div>
 
-          <button
-            className="submit-btn"
-            onClick={handleSubmit}
-            disabled={loading}
-          >
+          <button className="submit-btn" onClick={handleSubmit} disabled={loading} style={{ marginTop: 24 }}>
             {loading && <span className="spinner" />}
-            {loading ? "Signing in..." : "Sign In"}
+            {loading ? "Creating account..." : "Create Account"}
           </button>
 
           <div className="footer-note">
-            Don&apos;t have an account? <button onClick={() => navigate("/register")}>Register</button>
+            Already have an account? <button onClick={() => navigate("/login")}>Sign in</button>
           </div>
-
         </div>
-
       </div>
     </div>
   );
