@@ -177,9 +177,13 @@ export default function Dashboard() {
                                 { label: "New Case", icon: IconBriefcase },
                                 { label: "Schedule Hearing", icon: IconCalendar },
                                 { label: "Upload Document", icon: IconFile },
-                                { label: "Ask AI Assistant", icon: IconBot },
+                                { label: "Ask AI Assistant", icon: IconBot, path: "/assistant" },
                             ].map((action, i) => (
-                                <button className="quick-action-card" key={i}>
+                                <button
+                                    className="quick-action-card"
+                                    key={i}
+                                    onClick={() => action.path && navigate(action.path)}
+                                >
                                     <span className="quick-action-icon"><action.icon /></span>
                                     <span className="quick-action-plus"><IconPlus /></span>
                                     <span className="quick-action-label">{action.label}</span>

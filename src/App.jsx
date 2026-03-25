@@ -10,6 +10,7 @@ import EditCase from "./Editcase"
 import ScheduleHearing from "./Schedulehearing"
 import Documents from "./Documents"
 import AddDocument from "./Adddocument"
+import Assistant from "./Assistant"
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/hearings/schedule" element={<ScheduleHearing />} />
         <Route path="/documents" element={<Documents />} />
         <Route path="/documents/adddocument" element={<AddDocument />} />
+        <Route path="/assistant" element={<Assistant />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
