@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-import "./cases.css";
+import "./css/cases.css";
 import { createPortal } from "react-dom";
 
 const API_BASE = "http://localhost:8000";

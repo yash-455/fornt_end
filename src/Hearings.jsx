@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-import "./hearings.css";
+import "./css/hearings.css";
 
 const API_BASE = "http://localhost:8000";
 

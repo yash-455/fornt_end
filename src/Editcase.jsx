@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
 import Sidebar from "./components/Sidebar";
-import "./editcase.css";
+import "./css/editcase.css";
 
 const API_BASE = "http://localhost:8000";
 

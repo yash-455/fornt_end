@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "./components/Sidebar";
-import "./dashboard.css";
+import "./css/dashboard.css";
 
 // ── SVG Icons (Dashboard Specific) ──
 const IconBriefcase = () => (
