@@ -1,0 +1,449 @@
+.sh-content {
+    padding: 24px 32px;
+    animation: fadeUp 0.4s ease both;
+}
+
+.sh-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 960px;
+}
+
+.sh-error {
+    background: rgba(231, 76, 60, 0.08);
+    border: 1px solid rgba(231, 76, 60, 0.28);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #ff6b6b;
+}
+
+.sh-success {
+    background: rgba(34, 197, 94, 0.07);
+    border: 1px solid rgba(34, 197, 94, 0.25);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 24px;
+    font-size: 13px;
+    color: #4ade80;
+}
+
+.sh-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.sh-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.sh-field label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #888888;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+}
+
+.sh-hint {
+    color: #D4AF37;
+    font-size: 10px;
+    text-transform: none;
+    letter-spacing: 0;
+    font-family: 'Inter', sans-serif;
+    margin-left: 4px;
+}
+
+.required { color: #ff6b6b; margin-left: 2px; }
+
+.sh-field input,
+.sh-field select,
+.sh-field textarea {
+    background: #0f0f0f;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+}
+
+.sh-field input::placeholder,
+.sh-field textarea::placeholder { color: #4a5568; }
+
+.sh-field input:focus,
+.sh-field select:focus,
+.sh-field textarea:focus {
+    border-color: #cccccc;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04);
+}
+
+.sh-field input.field-error,
+.sh-field select.field-error { border-color: #ff6b6b; }
+
+.sh-field select {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+.sh-field select option { background: #0f0f0f; color: #ffffff; }
+.sh-field textarea { resize: vertical; min-height: 100px; }
+.field-error-msg { font-size: 12px; color: #ff6b6b; }
+
+.sh-time-input {
+    min-height: 44px;
+}
+
+.sh-time-input::-webkit-calendar-picker-indicator {
+    filter: invert(0.85);
+    cursor: pointer;
+}
+
+/* ── Last Hearing Date display box ── */
+.sh-last-date-box {
+    background: #0f0f0f;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: #ffffff;
+    font-family: 'Inter', sans-serif;
+}
+
+.sh-no-hearing {
+    color: #555555;
+    font-style: italic;
+}
+
+/* ── MUI TimePicker overrides ── */
+.sh-mui-timepicker {
+    width: 100% !important;
+}
+
+.sh-mui-timepicker .MuiOutlinedInput-root {
+    background: #0f0f0f !important;
+    border-radius: 8px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    color: #ffffff !important;
+    height: 46px !important;
+    width: 100% !important;
+}
+
+.sh-mui-timepicker .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline {
+    border-color: #555555 !important;
+}
+
+.sh-mui-timepicker .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+    border-color: #cccccc !important;
+    border-width: 1px !important;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.04) !important;
+}
+
+.sh-mui-timepicker .MuiOutlinedInput-notchedOutline {
+    border-color: #333333 !important;
+    border-radius: 8px !important;
+}
+
+/* hide floating label and its gap */
+.sh-mui-timepicker .MuiFormLabel-root,
+.sh-mui-timepicker .MuiInputLabel-root {
+    display: none !important;
+}
+
+.sh-mui-timepicker .MuiOutlinedInput-notchedOutline legend {
+    display: none !important;
+}
+
+/* text color — must use -webkit-text-fill-color for MUI */
+.sh-mui-timepicker .MuiInputBase-input {
+    color: #ffffff !important;
+    -webkit-text-fill-color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 14px !important;
+    padding: 10px 14px !important;
+    background: #0f0f0f !important;
+}
+
+.sh-mui-timepicker .MuiInputBase-input::placeholder {
+    color: #4a5568 !important;
+    -webkit-text-fill-color: #4a5568 !important;
+    opacity: 1 !important;
+}
+
+.sh-mui-timepicker .MuiInputAdornment-root .MuiIconButton-root {
+    color: #888888 !important;
+    transition: color 0.2s !important;
+}
+
+.sh-mui-timepicker .MuiInputAdornment-root .MuiIconButton-root:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ── MUI TimePicker popover ── */
+.MuiPickersPopper-root .MuiPaper-root {
+    background: #111111 !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 14px !important;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7) !important;
+    color: #ffffff !important;
+}
+
+.MuiPickersPopper-root .MuiPickersToolbar-root {
+    background: #111111 !important;
+    border-bottom: 1px solid #222222 !important;
+    padding: 16px 24px !important;
+}
+
+.MuiPickersPopper-root .MuiTypography-root {
+    color: #ffffff !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.MuiPickersPopper-root .MuiTimePickerToolbar-hourMinuteLabel .MuiPickersToolbarText-root {
+    color: rgba(255, 255, 255, 0.4) !important;
+    font-size: 48px !important;
+    font-weight: 300 !important;
+}
+
+.MuiPickersPopper-root .MuiTimePickerToolbar-hourMinuteLabel .Mui-selected {
+    color: #ffffff !important;
+}
+
+.MuiPickersPopper-root .MuiTimePickerToolbar-ampmSelection .MuiTimePickerToolbar-ampmLabel {
+    color: rgba(255, 255, 255, 0.35) !important;
+    font-size: 16px !important;
+}
+
+.MuiPickersPopper-root .MuiTimePickerToolbar-ampmSelection .Mui-selected {
+    color: #ffffff !important;
+}
+
+/* scroll columns */
+.MuiPickersPopper-root .MuiMultiSectionDigitalClock-root {
+    background: #111111 !important;
+    border-color: #222222 !important;
+}
+
+.MuiPickersPopper-root .MuiMultiSectionDigitalClockSection-root {
+    background: #111111 !important;
+    border-right: 1px solid #222222 !important;
+    scrollbar-width: none !important;
+}
+
+.MuiPickersPopper-root .MuiMultiSectionDigitalClockSection-root::-webkit-scrollbar {
+    display: none !important;
+}
+
+.MuiPickersPopper-root .MuiMultiSectionDigitalClockSection-item {
+    color: rgba(255, 255, 255, 0.35) !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 18px !important;
+    border-radius: 6px !important;
+    margin: 2px 4px !important;
+    transition: all 0.15s !important;
+}
+
+.MuiPickersPopper-root .MuiMultiSectionDigitalClockSection-item:hover {
+    background: rgba(255, 255, 255, 0.07) !important;
+    color: #ffffff !important;
+}
+
+.MuiPickersPopper-root .MuiMultiSectionDigitalClockSection-item.Mui-selected {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-weight: 700 !important;
+}
+
+/* action buttons */
+.MuiPickersPopper-root .MuiDialogActions-root {
+    background: #111111 !important;
+    border-top: 1px solid #222222 !important;
+    padding: 10px 16px !important;
+}
+
+.MuiPickersPopper-root .MuiDialogActions-root .MuiButton-root {
+    color: #888888 !important;
+    font-family: 'Inter', sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    border-radius: 6px !important;
+    transition: all 0.15s !important;
+}
+
+.MuiPickersPopper-root .MuiDialogActions-root .MuiButton-root:last-child {
+    background: #ffffff !important;
+    color: #000000 !important;
+    padding: 6px 18px !important;
+}
+
+.MuiPickersPopper-root .MuiDialogActions-root .MuiButton-root:last-child:hover {
+    background: #f0f0f0 !important;
+}
+
+.MuiPickersPopper-root .MuiDialogActions-root .MuiButton-root:first-child:hover {
+    color: #ffffff !important;
+    background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ── Notes ── */
+.sh-notes { margin-bottom: 28px; }
+
+.sh-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 11px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: #888888;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel:hover { border-color: #666666; color: #ffffff; }
+
+.btn-submit {
+    background: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #000000;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-submit:hover:not(:disabled) { background: #f0f0f0; }
+.btn-submit:disabled { opacity: 0.55; cursor: not-allowed; }
+
+.btn-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.3);
+    border-top-color: #000000;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+}
+
+/* ── Flatpickr Input ── */
+.fp-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.fp-input {
+    background: #0f0f0f;
+    border: 1px solid #333333;
+    border-radius: 8px;
+    padding: 12px 40px 12px 14px;
+    font-family: 'Inter', sans-serif;
+    font-size: 14px;
+    color: #ffffff;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    width: 100%;
+    cursor: pointer;
+}
+
+.fp-input::placeholder { color: #4a5568; }
+.fp-input:focus { border-color: #cccccc; box-shadow: 0 0 0 3px rgba(255,255,255,0.04); }
+.fp-input.field-error { border-color: #ff6b6b; }
+.fp-input-wrap:hover .fp-input { border-color: #555555; }
+
+.fp-icon {
+    position: absolute;
+    right: 12px;
+    color: #888888;
+    display: flex;
+    align-items: center;
+    pointer-events: none;
+    transition: color 0.2s;
+}
+
+.fp-input-wrap:hover .fp-icon { color: #cccccc; }
+
+/* ── Flatpickr Dark Theme ── */
+.flatpickr-calendar {
+    background: #111111 !important;
+    border: 1px solid #2a2a2a !important;
+    border-radius: 12px !important;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6) !important;
+    font-family: 'Inter', sans-serif !important;
+}
+
+.flatpickr-calendar.arrowTop:before,
+.flatpickr-calendar.arrowTop:after { display: none; }
+.flatpickr-months { background: #111111 !important; border-radius: 12px 12px 0 0 !important; padding: 8px 0 !important; }
+.flatpickr-month { background: transparent !important; color: #ffffff !important; fill: #ffffff !important; }
+.flatpickr-current-month { color: #ffffff !important; font-size: 14px !important; font-weight: 500 !important; }
+.flatpickr-current-month input.cur-year { color: #ffffff !important; }
+.flatpickr-current-month .flatpickr-monthDropdown-months { background: #111111 !important; color: #ffffff !important; border: none !important; }
+
+.flatpickr-prev-month, .flatpickr-next-month {
+    color: #888888 !important; fill: #888888 !important;
+    border: 1px solid #333333 !important; border-radius: 6px !important;
+    padding: 4px 8px !important; margin: 8px 6px !important; transition: all 0.15s !important;
+}
+
+.flatpickr-prev-month:hover, .flatpickr-next-month:hover {
+    color: #ffffff !important; fill: #ffffff !important;
+    background: #222222 !important; border-color: #555555 !important;
+}
+
+.flatpickr-weekdays { background: #111111 !important; }
+.flatpickr-weekday { background: transparent !important; color: #555555 !important; font-size: 11px !important; font-family: monospace !important; }
+.flatpickr-days { border: none !important; }
+.dayContainer { background: #111111 !important; padding: 4px !important; }
+
+.flatpickr-day {
+    background: none !important; border: none !important; color: #cccccc !important;
+    border-radius: 6px !important; font-size: 13px !important;
+    transition: background 0.12s, color 0.12s, transform 0.1s !important;
+}
+
+.flatpickr-day:hover { background: #222222 !important; color: #ffffff !important; transform: scale(1.1) !important; border: none !important; }
+.flatpickr-day.selected, .flatpickr-day.selected:hover { background: #ffffff !important; color: #000000 !important; font-weight: 700 !important; border: none !important; transform: none !important; }
+.flatpickr-day.today { border: 1px solid #444444 !important; color: #ffffff !important; }
+.flatpickr-day.today:hover { background: #222222 !important; border-color: #555555 !important; }
+.flatpickr-day.prevMonthDay, .flatpickr-day.nextMonthDay { color: #333333 !important; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+@media (max-width: 768px) {
+    .sh-content { padding: 16px; }
+    .sh-grid { grid-template-columns: 1fr; }
+    .sh-card { padding: 20px; }
+}
