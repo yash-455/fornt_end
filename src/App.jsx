@@ -14,6 +14,9 @@ import ScheduleHearing from "./Schedulehearing"
 import Documents from "./Documents"
 import AddDocument from "./Adddocument"
 import Assistant from "./Assistant"
+import Clients from "./Clients"
+import AddClient from "./AddClient"
+import EditClient from "./EditClient" 
 
 function App() {
   return (
@@ -34,7 +37,10 @@ function App() {
         <Route path="/documents" element={<Documents />} />
         <Route path="/documents/adddocument" element={<AddDocument />} />
         <Route path="/assistant" element={<Assistant />} />
+        <Route path="/clients" element={<Clients />} />
         <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/clients/add" element={<AddClient />} />
+        <Route path="/clients/edit/:id" element={<EditClient />} />
       </Routes>
     </BrowserRouter>
   )

@@ -26,6 +26,15 @@ const IconDashboard = () => (
         <rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
     </svg>
 );
+// Added Users/Clients Icon
+const IconUsers = () => (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+);
 const IconBriefcase = () => (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
         <rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
@@ -55,6 +64,7 @@ const IconLogout = () => (
 
 const navItems = [
     { id: "dashboard", label: "Dashboard", icon: IconDashboard, path: "/dashboard" },
+    { id: "clients", label: "Clients", icon: IconUsers, path: "/clients" }, // Added Clients route here
     { id: "cases", label: "Cases", icon: IconBriefcase, path: "/cases" },
     { id: "hearings", label: "Hearings", icon: IconCalendar, path: "/hearings" },
     { id: "documents", label: "Documents", icon: IconFile, path: "/documents" },
